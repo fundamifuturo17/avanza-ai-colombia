@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { APP_NAME, ROLE_LABELS } from '@/lib/constants'
+import { ROLE_LABELS } from '@/lib/constants'
 import { getInitials, cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -69,56 +69,65 @@ export function DashboardNav({ profile }: { profile: Profile }) {
   const links = NAV_LINKS[profile.role] ?? []
 
   return (
-    <nav className="border-b bg-white sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-6">
-        <Link href="/" className="font-bold text-blue-700 shrink-0 text-sm">
-          AVANZA AI
+    <nav className="border-b border-slate-200 bg-white/95 backdrop-blur-md sticky top-0 z-40 shadow-sm">
+      <div className="max-w-7xl mx-auto px-5 h-14 flex items-center gap-6">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
+            <Building2 className="h-3.5 w-3.5 text-white" />
+          </div>
+          <span className="font-bold text-slate-900 text-sm tracking-tight hidden sm:block">AVANZA AI</span>
         </Link>
 
-        <div className="flex items-center gap-1 flex-1 overflow-x-auto">
-          {links.map((link) => (
-            <Link key={link.href} href={link.href}>
-              <Button
-                variant={pathname === link.href || pathname.startsWith(link.href + '/') ? 'secondary' : 'ghost'}
-                size="sm"
-                className={cn('gap-1.5 whitespace-nowrap text-xs', pathname.startsWith(link.href) && 'font-medium')}
-              >
-                {link.icon}
-                {link.label}
-              </Button>
-            </Link>
-          ))}
+        <div className="flex items-center gap-0.5 flex-1 overflow-x-auto scrollbar-hide">
+          {links.map((link) => {
+            const isActive = pathname === link.href || pathname.startsWith(link.href + '/')
+            return (
+              <Link key={link.href} href={link.href}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    'gap-1.5 whitespace-nowrap text-xs rounded-lg h-8 px-3 transition-all',
+                    isActive
+                      ? 'bg-primary/10 text-primary font-semibold hover:bg-primary/15'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  )}
+                >
+                  {link.icon}
+                  {link.label}
+                </Button>
+              </Link>
+            )
+          })}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <Button variant="ghost" size="icon" className="relative h-8 w-8">
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Button variant="ghost" size="icon" className="relative h-8 w-8 text-slate-500 hover:text-slate-900 rounded-lg">
             <Bell className="h-4 w-4" />
             {noLeidas > 0 && (
-              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
                 {noLeidas > 9 ? '9+' : noLeidas}
               </span>
             )}
           </Button>
 
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2 h-8">
-                <Avatar className="h-6 w-6">
-                  <AvatarFallback className="text-xs bg-blue-100 text-blue-700">
-                    {getInitials(profile.full_name)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-xs hidden sm:block max-w-24 truncate">{profile.full_name}</span>
-              </Button>
+            <DropdownMenuTrigger className="flex items-center gap-2 h-8 pl-1.5 pr-2.5 rounded-lg hover:bg-slate-100 transition-colors outline-none">
+              <Avatar className="h-6 w-6">
+                <AvatarFallback className="text-[10px] font-bold bg-primary text-white">
+                  {getInitials(profile.full_name)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs font-medium text-slate-700 hidden sm:block max-w-28 truncate">{profile.full_name}</span>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel className="space-y-0.5">
-                <p className="text-xs font-medium truncate">{profile.full_name}</p>
-                <p className="text-xs text-muted-foreground">{profile.email}</p>
-                <Badge variant="secondary" className="text-xs mt-1">{ROLE_LABELS[profile.role]}</Badge>
+            <DropdownMenuContent align="end" className="w-52 rounded-xl shadow-lg border-slate-200">
+              <DropdownMenuLabel className="space-y-1 pb-2">
+                <p className="text-sm font-semibold truncate text-slate-900">{profile.full_name}</p>
+                <p className="text-xs text-muted-foreground truncate">{profile.email}</p>
+                <Badge variant="secondary" className="text-xs mt-1 font-medium">{ROLE_LABELS[profile.role]}</Badge>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer rounded-lg focus:bg-red-50 focus:text-red-700">
                 <LogOut className="mr-2 h-4 w-4" />
                 Cerrar sesión
               </DropdownMenuItem>
