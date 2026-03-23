@@ -44,8 +44,9 @@ export function FiltrosVacantes() {
       </div>
 
       <Select
-        defaultValue={searchParams.get('sector') ?? 'todos'}
-        onValueChange={(v) => updateParam('sector', v)}
+        key={`sector-${searchParams.get('sector') ?? 'todos'}`}
+        value={searchParams.get('sector') ?? 'todos'}
+        onValueChange={(v) => updateParam('sector', v ?? '')}
       >
         <SelectTrigger className="w-36 h-9">
           <SelectValue placeholder="Sector" />
@@ -58,8 +59,9 @@ export function FiltrosVacantes() {
       </Select>
 
       <Select
-        defaultValue={searchParams.get('departamento') ?? 'todos'}
-        onValueChange={(v) => updateParam('departamento', v)}
+        key={`dep-${searchParams.get('departamento') ?? 'todos'}`}
+        value={searchParams.get('departamento') ?? 'todos'}
+        onValueChange={(v) => updateParam('departamento', v ?? '')}
       >
         <SelectTrigger className="w-44 h-9">
           <SelectValue placeholder="Departamento" />
