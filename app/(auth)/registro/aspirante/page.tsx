@@ -41,7 +41,6 @@ export default function RegistroAspirantePage() {
   const [paso, setPaso] = useState(1)
   const [loading, setLoading] = useState(false)
   const [datosPersonales, setDatosPersonales] = useState<Paso1Data | null>(null)
-  const supabase = createClient()
 
   const form1 = useForm<Paso1Data>({
     resolver: zodResolver(paso1Schema),
@@ -60,6 +59,7 @@ export default function RegistroAspirantePage() {
 
   async function handlePaso2(data: Paso2Data) {
     if (!datosPersonales) return
+    const supabase = createClient()
     setLoading(true)
 
     try {
