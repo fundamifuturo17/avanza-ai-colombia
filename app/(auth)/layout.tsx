@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { APP_NAME } from '@/lib/constants'
 import Link from 'next/link'
 

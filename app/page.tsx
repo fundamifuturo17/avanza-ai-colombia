@@ -10,16 +10,20 @@ import {
 } from 'lucide-react'
 
 async function getStats() {
-  const supabase = await createClient()
-  const [vacantes, postulaciones, entidades] = await Promise.all([
-    supabase.from('vacantes').select('id', { count: 'exact', head: true }).eq('estado', 'publicada'),
-    supabase.from('postulaciones').select('id', { count: 'exact', head: true }),
-    supabase.from('entidades').select('id', { count: 'exact', head: true }).eq('validado', true),
-  ])
-  return {
-    vacantes: vacantes.count ?? 0,
-    postulaciones: postulaciones.count ?? 0,
-    entidades: entidades.count ?? 0,
+  try {
+    const supabase = await createClient()
+    const [vacantes, postulaciones, entidades] = await Promise.all([
+      supabase.from('vacantes').select('id', { count: 'exact', head: true }).eq('estado', 'publicada'),
+      supabase.from('postulaciones').select('id', { count: 'exact', head: true }),
+      supabase.from('entidades').select('id', { count: 'exact', head: true }).eq('validado', true),
+    ])
+    return {
+      vacantes: vacantes.count ?? 0,
+      postulaciones: postulaciones.count ?? 0,
+      entidades: entidades.count ?? 0,
+    }
+  } catch {
+    return { vacantes: 0, postulaciones: 0, entidades: 0 }
   }
 }
 
