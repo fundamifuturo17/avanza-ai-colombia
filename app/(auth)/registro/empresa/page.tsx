@@ -171,7 +171,7 @@ export default function RegistroEmpresaPage() {
               <FormField control={form1.control} name="sector_economico" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Sector económico</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger>
                     </FormControl>
@@ -189,7 +189,7 @@ export default function RegistroEmpresaPage() {
               <FormField control={form1.control} name="tamano_empresa" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tamaño de empresa</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger>
                     </FormControl>

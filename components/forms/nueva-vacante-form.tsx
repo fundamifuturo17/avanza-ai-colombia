@@ -158,7 +158,7 @@ export function NuevaVacanteForm({
                     <FormField control={form.control} name="departamento" render={({ field }) => (
                       <FormItem>
                         <FormLabel>Departamento</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl><SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger></FormControl>
                           <SelectContent className="max-h-48">
                             {DEPARTAMENTOS_CO.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
@@ -203,7 +203,7 @@ export function NuevaVacanteForm({
                   <FormField control={form.control} name="tipo_contrato" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tipo de contrato</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl><SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger></FormControl>
                         <SelectContent>
                           {tiposContrato.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
