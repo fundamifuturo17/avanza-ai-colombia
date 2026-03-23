@@ -103,7 +103,7 @@ export default function RegistroAspirantePage() {
           <p className="text-muted-foreground text-sm">
             Revisa tu correo para confirmar tu cuenta y luego inicia sesión.
           </p>
-          <Button className="w-full" onClick={() => router.push('/auth/login')}>
+          <Button className="w-full" onClick={() => router.push('/login')}>
             Ir a iniciar sesión
           </Button>
         </CardContent>
@@ -257,7 +257,7 @@ export default function RegistroAspirantePage() {
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
           ¿Ya tienes cuenta?{' '}
-          <Link href="/auth/login" className="text-primary hover:underline">
+          <Link href="/login" className="text-primary hover:underline">
             Inicia sesión
           </Link>
         </p>

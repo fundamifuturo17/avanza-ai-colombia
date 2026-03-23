@@ -38,12 +38,12 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && isProtected) {
     const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
+    url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
   // Si ya tiene sesión, no puede ir a login/registro
-  if (user && pathname.startsWith('/auth')) {
+  if (user && (pathname === '/login' || pathname.startsWith('/registro'))) {
     const url = request.nextUrl.clone()
     // Redirigir según rol
     const { data: profile } = await supabase
@@ -59,7 +59,7 @@ export async function updateSession(request: NextRequest) {
       admin: '/admin/transparencia',
     }
 
-    url.pathname = roleMap[profile?.role ?? 'aspirante'] ?? '/aspirante/oportunidades'
+    url.pathname = roleMap[(profile as any)?.role ?? 'aspirante'] ?? '/aspirante/oportunidades'
     return NextResponse.redirect(url)
   }
 

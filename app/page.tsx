@@ -44,7 +44,7 @@ export default async function LandingPage() {
             <Badge variant="secondary" className="text-xs font-medium hidden sm:flex">Colombia</Badge>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/auth/login">
+            <Link href="/login">
               <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900">
                 Ingresar
               </Button>
@@ -305,7 +305,7 @@ export default async function LandingPage() {
                 Crear cuenta gratis
               </Button>
             </Link>
-            <Link href="/auth/login">
+            <Link href="/login">
               <Button size="lg" variant="ghost" className="w-full sm:w-auto rounded-full px-8 h-12 border border-white/30 text-white hover:bg-white/10 hover:text-white bg-transparent font-medium">
                 Ya tengo cuenta
               </Button>

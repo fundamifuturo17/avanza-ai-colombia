@@ -219,7 +219,7 @@ export default function RegistroProveedorPage() {
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
           ¿Ya tienes cuenta?{' '}
-          <Link href="/auth/login" className="text-primary hover:underline">
+          <Link href="/login" className="text-primary hover:underline">
             Inicia sesión
           </Link>
         </p>

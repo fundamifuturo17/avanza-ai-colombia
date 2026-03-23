@@ -6,7 +6,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) redirect('/auth/login')
+  if (!user) redirect('/login')
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -14,7 +14,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .eq('id', user.id)
     .single()
 
-  if (!profile) redirect('/auth/login')
+  if (!profile) redirect('/login')
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
