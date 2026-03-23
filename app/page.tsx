@@ -80,7 +80,7 @@ export default async function LandingPage() {
                 </Button>
               </Link>
               <Link href="/registro/empresa">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full px-8 h-12 text-base font-medium border-white/25 text-white hover:bg-white/10 backdrop-blur">
+                <Button size="lg" variant="ghost" className="w-full sm:w-auto rounded-full px-8 h-12 text-base font-medium border border-white/30 text-white hover:bg-white/10 hover:text-white bg-transparent backdrop-blur">
                   Soy empresa o entidad
                 </Button>
               </Link>
@@ -306,7 +306,7 @@ export default async function LandingPage() {
               </Button>
             </Link>
             <Link href="/auth/login">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full px-8 h-12 border-white/25 text-white hover:bg-white/10 font-medium">
+              <Button size="lg" variant="ghost" className="w-full sm:w-auto rounded-full px-8 h-12 border border-white/30 text-white hover:bg-white/10 hover:text-white bg-transparent font-medium">
                 Ya tengo cuenta
               </Button>
             </Link>
