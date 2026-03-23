@@ -317,7 +317,7 @@ export default async function LandingPage() {
       {/* FOOTER */}
       <footer className="bg-slate-950 py-8 px-6 text-center">
         <p className="text-sm font-semibold text-slate-300">{APP_NAME}</p>
-        <p className="text-xs text-slate-600 mt-1">Colombia 2024 · MIT License · Ley 1581 · Ley 909 · Ley 1712</p>
+        <p className="text-xs text-slate-600 mt-1">© 2026 AVANZA AI Colombia · Todos los derechos reservados · MIT License · Ley 1581 · Ley 909 · Ley 1712</p>
       </footer>
     </div>
   )
