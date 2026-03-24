@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2, ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react'
+import { crearPerfilAspirante } from '@/app/actions/registro'
 import { createClient } from '@/lib/supabase/client'
 import { DEPARTAMENTOS_CO } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
@@ -63,26 +64,34 @@ export default function RegistroAspirantePage() {
     setLoading(true)
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        options: {
-          data: {
-            role: 'aspirante',
-            full_name: datosPersonales.full_name,
-            document_id: datosPersonales.document_id,
-            document_type: datosPersonales.document_type,
-            phone: datosPersonales.phone,
-            city: datosPersonales.city,
-            department: datosPersonales.department,
-            consentimiento_datos: true,
-            fecha_consentimiento: new Date().toISOString(),
-          },
-        },
       })
 
       if (error) {
         toast.error(error.message)
+        return
+      }
+
+      if (!authData.user) {
+        toast.error('Error al crear la cuenta')
+        return
+      }
+
+      const { error: perfilError } = await crearPerfilAspirante({
+        userId: authData.user.id,
+        email: data.email,
+        full_name: datosPersonales.full_name,
+        document_id: datosPersonales.document_id,
+        document_type: datosPersonales.document_type,
+        phone: datosPersonales.phone,
+        city: datosPersonales.city,
+        department: datosPersonales.department,
+      })
+
+      if (perfilError) {
+        toast.error('Cuenta creada pero hubo un error guardando el perfil')
         return
       }
 

@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
   Briefcase, LayoutDashboard, FileText, User, Shield,
@@ -121,11 +121,18 @@ export function DashboardNav({ profile }: { profile: Profile }) {
               <span className="text-xs font-medium text-slate-700 hidden sm:block max-w-28 truncate">{profile.full_name}</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52 rounded-xl shadow-lg border-slate-200">
-              <DropdownMenuLabel className="space-y-1 pb-2">
+              <div className="px-2 py-2 space-y-1">
                 <p className="text-sm font-semibold truncate text-slate-900">{profile.full_name}</p>
                 <p className="text-xs text-muted-foreground truncate">{profile.email}</p>
                 <Badge variant="secondary" className="text-xs mt-1 font-medium">{ROLE_LABELS[profile.role]}</Badge>
-              </DropdownMenuLabel>
+              </div>
+              <DropdownMenuSeparator />
+              {profile.role === 'aspirante' && (
+                <DropdownMenuItem onClick={() => router.push('/aspirante/mis-datos')} className="cursor-pointer rounded-lg">
+                  <User className="mr-2 h-4 w-4" />
+                  Mis datos
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer rounded-lg focus:bg-red-50 focus:text-red-700">
                 <LogOut className="mr-2 h-4 w-4" />

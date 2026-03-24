@@ -4,19 +4,26 @@ import { Card, CardContent } from '@/components/ui/card'
 import { formatDate } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/constants'
 import { User } from 'lucide-react'
+import { CrearUsuarioForm } from '@/components/admin/crear-usuario-form'
 
 export default async function AdminUsuariosPage() {
   const supabase = await createClient()
 
-  const { data: usuarios } = await supabase
-    .from('profiles')
-    .select(`
-      id, role, full_name, email, document_id, city, department,
-      created_at, solicitud_supresion,
-      entidades (nombre)
-    `)
-    .order('created_at', { ascending: false })
-    .limit(100)
+  const [usuariosRes, entidadesRes] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select(`id, role, full_name, email, document_id, city, department, created_at, entidades (nombre)`)
+      .order('created_at', { ascending: false })
+      .limit(100),
+    supabase
+      .from('entidades')
+      .select('id, nombre, tipo')
+      .eq('activo', true)
+      .order('nombre'),
+  ])
+
+  const usuarios = usuariosRes.data ?? []
+  const entidades = (entidadesRes.data ?? []) as { id: string; nombre: string; tipo: string }[]
 
   const ROLE_COLORS: Record<string, string> = {
     admin: 'destructive', proveedor: 'default',
@@ -25,13 +32,16 @@ export default async function AdminUsuariosPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Gestión de usuarios</h1>
-        <p className="text-sm text-muted-foreground">{usuarios?.length ?? 0} usuarios registrados</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">Gestión de usuarios</h1>
+          <p className="text-sm text-muted-foreground">{usuarios.length} usuarios registrados</p>
+        </div>
+        <CrearUsuarioForm entidades={entidades} />
       </div>
 
       <div className="space-y-2">
-        {(usuarios as any[])?.map((u) => (
+        {(usuarios as any[]).map((u) => (
           <Card key={u.id}>
             <CardContent className="p-3">
               <div className="flex items-center gap-3">
@@ -44,13 +54,11 @@ export default async function AdminUsuariosPage() {
                     <Badge variant={ROLE_COLORS[u.role] as any} className="text-xs">
                       {ROLE_LABELS[u.role]}
                     </Badge>
-                    {u.solicitud_supresion && (
-                      <Badge variant="destructive" className="text-xs">Solicitud supresión</Badge>
-                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {u.email} · Doc: {u.document_id}
-                    {(u.entidades as any)?.nombre && ` · ${(u.entidades as any).nombre}`}
+                    {u.entidades?.nombre && ` · ${u.entidades.nombre}`}
+                    {u.city && ` · ${u.city}`}
                   </p>
                 </div>
                 <span className="text-xs text-muted-foreground shrink-0">
@@ -60,6 +68,9 @@ export default async function AdminUsuariosPage() {
             </CardContent>
           </Card>
         ))}
+        {usuarios.length === 0 && (
+          <p className="text-center py-12 text-muted-foreground text-sm">No hay usuarios registrados</p>
+        )}
       </div>
     </div>
   )

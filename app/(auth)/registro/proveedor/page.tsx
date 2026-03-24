@@ -9,6 +9,7 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2, ChevronRight, ChevronLeft, CheckCircle2, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { crearPerfilProveedor } from '@/app/actions/registro'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -72,25 +73,33 @@ export default function RegistroProveedorPage() {
         return
       }
 
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        options: {
-          data: {
-            role: 'proveedor',
-            full_name: data.full_name,
-            document_id: data.document_id,
-            document_type: 'CC',
-            entidad_id: (entidad as any).id,
-            cargo_entidad: datosEntidad.cargo_entidad,
-            consentimiento_datos: true,
-            fecha_consentimiento: new Date().toISOString(),
-          },
-        },
       })
 
       if (error) {
         toast.error(error.message)
+        return
+      }
+
+      if (!authData.user) {
+        toast.error('Error al crear la cuenta')
+        return
+      }
+
+      const { error: perfilError } = await crearPerfilProveedor({
+        userId: authData.user.id,
+        email: data.email,
+        full_name: data.full_name,
+        document_id: data.document_id,
+        document_type: 'CC',
+        cargo_entidad: datosEntidad.cargo_entidad,
+        entidad_id: (entidad as any).id,
+      })
+
+      if (perfilError) {
+        toast.error('Cuenta creada pero hubo un error guardando el perfil')
         return
       }
 
