@@ -13,6 +13,7 @@ import { formatDate } from '@/lib/utils'
 import { ROLE_LABELS } from '@/lib/constants'
 import { User } from 'lucide-react'
 import { CrearUsuarioForm } from '@/components/admin/crear-usuario-form'
+import { EliminarUsuarioBtn } from '@/components/admin/eliminar-usuario-btn'
 
 export default async function AdminUsuariosPage() {
   const supabase = createAdminClient()
@@ -69,9 +70,10 @@ export default async function AdminUsuariosPage() {
                     {u.city && ` · ${u.city}`}
                   </p>
                 </div>
-                <span className="text-xs text-muted-foreground shrink-0">
-                  {formatDate(u.created_at)}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-muted-foreground">{formatDate(u.created_at)}</span>
+                  <EliminarUsuarioBtn userId={u.id} nombre={u.full_name} />
+                </div>
               </div>
             </CardContent>
           </Card>
