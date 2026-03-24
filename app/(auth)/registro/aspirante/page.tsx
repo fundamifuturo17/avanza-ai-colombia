@@ -8,7 +8,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2, CheckCircle2 } from 'lucide-react'
-import { crearPerfilAspirante } from '@/app/actions/registro'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,21 +47,19 @@ export default function RegistroAspirantePage() {
       if (error) { toast.error(error.message); return }
       if (!authData.user) { toast.error('Error al crear la cuenta'); return }
 
-      let perfilError: string | null = null
-      try {
-        const res = await crearPerfilAspirante({
-          userId: authData.user.id,
-          email: data.email,
-          full_name: data.full_name,
-          document_id: 'PENDIENTE',
-          document_type: 'CC',
-        })
-        perfilError = res?.error ?? null
-      } catch (e) {
-        perfilError = e instanceof Error ? e.message : 'Error desconocido'
+      const perfil: any = {
+        id: authData.user.id,
+        role: 'aspirante',
+        email: data.email,
+        full_name: data.full_name,
+        document_id: 'PENDIENTE',
+        document_type: 'CC',
+        consentimiento_datos: true,
+        fecha_consentimiento: new Date().toISOString(),
       }
+      const { error: perfilError } = await supabase.from('profiles').insert(perfil)
 
-      if (perfilError) { toast.error(`Error: ${perfilError}`); return }
+      if (perfilError) { toast.error(`Error: ${perfilError.message}`); return }
 
       setDone(true)
     } catch (e) {
