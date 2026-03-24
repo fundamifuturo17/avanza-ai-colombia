@@ -35,37 +35,22 @@ export default function RegistroAspirantePage() {
   })
 
   async function onSubmit(data: FormData) {
-    const supabase = createClient()
     setLoading(true)
-
     try {
-      const { data: authData, error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
+      const res = await fetch('/api/registro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email, password: data.password, role: 'aspirante', full_name: data.full_name }),
       })
+      const json = await res.json()
+      if (json.error) { toast.error(json.error); return }
 
-      if (error) { toast.error(error.message); return }
-      if (!authData.user) { toast.error('Error al crear la cuenta'); return }
+      // Iniciar sesión automáticamente
+      const supabase = createClient()
+      const { error: loginError } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password })
+      if (loginError) { setDone(true); return }
 
-      if (authData.session) {
-        await supabase.auth.setSession(authData.session)
-      }
-
-      const perfil: any = {
-        id: authData.user.id,
-        role: 'aspirante',
-        email: data.email,
-        full_name: data.full_name,
-        document_id: 'PENDIENTE',
-        document_type: 'CC',
-        consentimiento_datos: true,
-        fecha_consentimiento: new Date().toISOString(),
-      }
-      const { error: perfilError } = await supabase.from('profiles').insert(perfil)
-
-      if (perfilError) { toast.error(`Error: ${perfilError.message}`); return }
-
-      setDone(true)
+      router.push('/aspirante/oportunidades')
     } catch (e) {
       toast.error(`Error: ${e instanceof Error ? e.message : String(e)}`)
     } finally {
@@ -79,12 +64,8 @@ export default function RegistroAspirantePage() {
         <CardContent className="pt-10 pb-8 space-y-4">
           <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
           <h2 className="text-xl font-semibold">¡Cuenta creada!</h2>
-          <p className="text-muted-foreground text-sm">
-            Tu cuenta está lista. Puedes completar tu perfil después de iniciar sesión.
-          </p>
-          <Button className="w-full" onClick={() => router.push('/login')}>
-            Ir a iniciar sesión
-          </Button>
+          <p className="text-muted-foreground text-sm">Tu cuenta está lista.</p>
+          <Button className="w-full" onClick={() => router.push('/login')}>Ir a iniciar sesión</Button>
         </CardContent>
       </Card>
     )
@@ -106,7 +87,6 @@ export default function RegistroAspirantePage() {
                 <FormMessage />
               </FormItem>
             )} />
-
             <FormField control={form.control} name="email" render={({ field }) => (
               <FormItem>
                 <FormLabel>Correo electrónico</FormLabel>
@@ -114,7 +94,6 @@ export default function RegistroAspirantePage() {
                 <FormMessage />
               </FormItem>
             )} />
-
             <FormField control={form.control} name="password" render={({ field }) => (
               <FormItem>
                 <FormLabel>Contraseña</FormLabel>
@@ -122,29 +101,22 @@ export default function RegistroAspirantePage() {
                 <FormMessage />
               </FormItem>
             )} />
-
             <FormField control={form.control} name="consentimiento" render={({ field }) => (
               <FormItem className="flex gap-3 items-start space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
+                <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 <div className="space-y-1">
                   <FormLabel className="cursor-pointer">Autorizo el tratamiento de mis datos personales</FormLabel>
-                  <p className="text-xs text-muted-foreground">
-                    De acuerdo con la Ley 1581 de 2012.
-                  </p>
+                  <p className="text-xs text-muted-foreground">De acuerdo con la Ley 1581 de 2012.</p>
                   <FormMessage />
                 </div>
               </FormItem>
             )} />
-
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Crear cuenta
             </Button>
           </form>
         </Form>
-
         <p className="mt-4 text-center text-sm text-muted-foreground">
           ¿Ya tienes cuenta?{' '}
           <Link href="/login" className="text-primary hover:underline">Inicia sesión</Link>

@@ -37,39 +37,28 @@ export default function RegistroProveedorPage() {
   })
 
   async function onSubmit(data: FormData) {
-    const supabase = createClient()
     setLoading(true)
-
     try {
-      const { data: authData, error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
+      const res = await fetch('/api/registro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          role: 'proveedor',
+          full_name: data.full_name,
+          cargo_entidad: data.cargo_entidad,
+        }),
       })
+      const json = await res.json()
+      if (json.error) { toast.error(json.error); return }
 
-      if (error) { toast.error(error.message); return }
-      if (!authData.user) { toast.error('Error al crear la cuenta'); return }
+      // Iniciar sesión automáticamente
+      const supabase = createClient()
+      const { error: loginError } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password })
+      if (loginError) { setDone(true); return }
 
-      // Establecer sesión explícitamente antes del insert
-      if (authData.session) {
-        await supabase.auth.setSession(authData.session)
-      }
-
-      const perfil: any = {
-        id: authData.user.id,
-        role: 'proveedor',
-        email: data.email,
-        full_name: data.full_name,
-        document_id: 'PENDIENTE',
-        document_type: 'CC',
-        cargo_entidad: data.cargo_entidad,
-        consentimiento_datos: true,
-        fecha_consentimiento: new Date().toISOString(),
-      }
-      const { error: perfilError } = await supabase.from('profiles').insert(perfil)
-
-      if (perfilError) { toast.error(`Error: ${perfilError.message}`); return }
-
-      setDone(true)
+      router.push('/proveedor')
     } catch (e) {
       toast.error(`Error: ${e instanceof Error ? e.message : String(e)}`)
     } finally {
@@ -86,9 +75,7 @@ export default function RegistroProveedorPage() {
           <p className="text-muted-foreground text-sm">
             Tu cuenta está pendiente de aprobación. El administrador la revisará en máx. 2 días hábiles.
           </p>
-          <Button variant="outline" className="w-full" onClick={() => router.push('/')}>
-            Volver al inicio
-          </Button>
+          <Button variant="outline" className="w-full" onClick={() => router.push('/')}>Volver al inicio</Button>
         </CardContent>
       </Card>
     )
@@ -97,7 +84,7 @@ export default function RegistroProveedorPage() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Registro — Servicios Públicos</CardTitle>
+        <CardTitle>Registro — Entidad Pública</CardTitle>
         <CardDescription>Registro básico para funcionarios de entidades públicas.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -110,15 +97,13 @@ export default function RegistroProveedorPage() {
                 <FormMessage />
               </FormItem>
             )} />
-
             <FormField control={form.control} name="entidad_nombre" render={({ field }) => (
               <FormItem>
-                <FormLabel>Nombre de la entidad</FormLabel>
-                <FormControl><Input placeholder="Ministerio de Salud" {...field} /></FormControl>
+                <FormLabel>Nombre de la entidad pública</FormLabel>
+                <FormControl><Input placeholder="Alcaldía de Bogotá" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
-
             <FormField control={form.control} name="cargo_entidad" render={({ field }) => (
               <FormItem>
                 <FormLabel>Tu cargo</FormLabel>
@@ -126,7 +111,6 @@ export default function RegistroProveedorPage() {
                 <FormMessage />
               </FormItem>
             )} />
-
             <FormField control={form.control} name="email" render={({ field }) => (
               <FormItem>
                 <FormLabel>Correo institucional</FormLabel>
@@ -134,7 +118,6 @@ export default function RegistroProveedorPage() {
                 <FormMessage />
               </FormItem>
             )} />
-
             <FormField control={form.control} name="password" render={({ field }) => (
               <FormItem>
                 <FormLabel>Contraseña</FormLabel>
@@ -142,12 +125,9 @@ export default function RegistroProveedorPage() {
                 <FormMessage />
               </FormItem>
             )} />
-
             <FormField control={form.control} name="consentimiento" render={({ field }) => (
               <FormItem className="flex gap-3 items-start space-y-0 rounded-md border p-4">
-                <FormControl>
-                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
+                <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 <div className="space-y-1">
                   <FormLabel className="cursor-pointer">Autorizo el tratamiento de mis datos personales</FormLabel>
                   <p className="text-xs text-muted-foreground">De acuerdo con la Ley 1581 de 2012.</p>
@@ -155,14 +135,12 @@ export default function RegistroProveedorPage() {
                 </div>
               </FormItem>
             )} />
-
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Enviar solicitud
+              Crear cuenta
             </Button>
           </form>
         </Form>
-
         <p className="mt-4 text-center text-sm text-muted-foreground">
           ¿Ya tienes cuenta?{' '}
           <Link href="/login" className="text-primary hover:underline">Inicia sesión</Link>
