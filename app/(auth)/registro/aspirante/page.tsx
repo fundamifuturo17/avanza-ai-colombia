@@ -79,16 +79,22 @@ export default function RegistroAspirantePage() {
         return
       }
 
-      const { error: perfilError } = await crearPerfilAspirante({
-        userId: authData.user.id,
-        email: data.email,
-        full_name: datosPersonales.full_name,
-        document_id: datosPersonales.document_id,
-        document_type: datosPersonales.document_type,
-        phone: datosPersonales.phone,
-        city: datosPersonales.city,
-        department: datosPersonales.department,
-      })
+      let perfilError: string | null = null
+      try {
+        const res = await crearPerfilAspirante({
+          userId: authData.user.id,
+          email: data.email,
+          full_name: datosPersonales.full_name,
+          document_id: datosPersonales.document_id,
+          document_type: datosPersonales.document_type,
+          phone: datosPersonales.phone,
+          city: datosPersonales.city,
+          department: datosPersonales.department,
+        })
+        perfilError = res?.error ?? null
+      } catch (e) {
+        perfilError = e instanceof Error ? e.message : 'Error desconocido'
+      }
 
       if (perfilError) {
         toast.error(`Error guardando perfil: ${perfilError}`)
@@ -96,8 +102,8 @@ export default function RegistroAspirantePage() {
       }
 
       setPaso(3)
-    } catch {
-      toast.error('Error al registrarse')
+    } catch (e) {
+      toast.error(`Error al registrarse: ${e instanceof Error ? e.message : String(e)}`)
     } finally {
       setLoading(false)
     }
