@@ -12,7 +12,10 @@ function createAdminClient() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password, role, full_name, cargo_entidad, entidad_nombre } = body
+    const {
+      email, password, role, full_name, cargo_entidad,
+      entidad_nombre, nit, sector_economico, tamano_empresa, document_id,
+    } = body
 
     const adminClient = createAdminClient()
 
@@ -27,7 +30,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: authError.message }, { status: 400 })
     }
 
-    // Si es proveedor, crear la entidad primero
+    // Crear entidad según el rol
     let entidadId: string | null = null
     if (role === 'proveedor' && entidad_nombre) {
       const { data: entidad, error: entidadError } = await adminClient
@@ -49,6 +52,29 @@ export async function POST(request: NextRequest) {
       entidadId = entidad.id
     }
 
+    if (role === 'empresa_privada' && entidad_nombre && nit) {
+      const { data: entidad, error: entidadError } = await adminClient
+        .from('entidades')
+        .insert({
+          nombre: entidad_nombre,
+          tipo: 'privado',
+          nit: nit.replace(/\D/g, ''),
+          validado: false,
+          activo: true,
+          sector_economico: sector_economico || null,
+          tamano_empresa: tamano_empresa || null,
+          limite_vacantes: 5,
+        })
+        .select('id')
+        .single()
+
+      if (entidadError) {
+        await adminClient.auth.admin.deleteUser(authData.user.id)
+        return NextResponse.json({ error: entidadError.message }, { status: 400 })
+      }
+      entidadId = entidad.id
+    }
+
     // Upsert perfil: maneja el conflicto con el trigger handle_new_user
     const { error: profileError } = await adminClient
       .from('profiles')
@@ -57,7 +83,7 @@ export async function POST(request: NextRequest) {
         role,
         email,
         full_name,
-        document_id: 'PENDIENTE',
+        document_id: document_id || 'PENDIENTE',
         document_type: 'CC',
         cargo_entidad: cargo_entidad || null,
         entidad_id: entidadId,

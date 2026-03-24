@@ -6,13 +6,13 @@ export default async function EmpresaNuevaVacantePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('entidad_id, entidades(nombre, validado, tipo)')
     .eq('id', user!.id)
-    .single()
+    .maybeSingle()
 
-  const entidad = profile?.entidades as any
+  const entidad = profile?.entidades
   if (!entidad?.validado) redirect('/empresa')
 
   return (
@@ -22,7 +22,7 @@ export default async function EmpresaNuevaVacantePage() {
         <p className="text-sm text-muted-foreground">{entidad?.nombre}</p>
       </div>
       <NuevaVacanteForm
-        entidadId={profile!.entidad_id!}
+        entidadId={profile?.entidad_id ?? ''}
         userId={user!.id}
         esPublico={false}
       />

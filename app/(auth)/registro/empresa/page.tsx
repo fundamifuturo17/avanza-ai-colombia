@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 
 const paso1Schema = z.object({
@@ -29,6 +30,7 @@ const paso2Schema = z.object({
   cargo_entidad: z.string().min(2, 'Cargo requerido'),
   email: z.string().email('Email inválido'),
   password: z.string().min(8, 'Mínimo 8 caracteres'),
+  consentimiento: z.boolean().refine((v) => v === true, { message: 'Debes aceptar el tratamiento de datos' }),
 })
 
 type Paso1Data = z.infer<typeof paso1Schema>
@@ -47,7 +49,7 @@ export default function RegistroEmpresaPage() {
 
   const form2 = useForm<Paso2Data>({
     resolver: zodResolver(paso2Schema),
-    defaultValues: { full_name: '', document_id: '', cargo_entidad: '', email: '', password: '' },
+    defaultValues: { full_name: '', document_id: '', cargo_entidad: '', email: '', password: '', consentimiento: false },
   })
 
   function handlePaso1(data: Paso1Data) {
@@ -57,60 +59,33 @@ export default function RegistroEmpresaPage() {
 
   async function handlePaso2(data: Paso2Data) {
     if (!datosEmpresa) return
-    const supabase = createClient()
     setLoading(true)
-
     try {
-      // Crear entidad primero
-      const { data: entidad, error: entidadError } = await (supabase as any)
-        .from('entidades')
-        .insert({
-          nombre: datosEmpresa.empresa_nombre,
-          tipo: 'privado',
-          nit: datosEmpresa.nit.replace(/\D/g, ''),
-          activo: true,
-          validado: false,
+      const res = await fetch('/api/registro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          role: 'empresa_privada',
+          full_name: data.full_name,
+          document_id: data.document_id,
+          cargo_entidad: data.cargo_entidad,
+          entidad_nombre: datosEmpresa.empresa_nombre,
+          nit: datosEmpresa.nit,
           sector_economico: datosEmpresa.sector_economico,
           tamano_empresa: datosEmpresa.tamano_empresa,
-          limite_vacantes: 5,
-        })
-        .select('id')
-        .single()
-
-      if (entidadError) {
-        if (entidadError.code === '23505') {
-          toast.error('Ya existe una empresa registrada con ese NIT')
-        } else {
-          toast.error('Error al registrar la empresa')
-        }
-        return
-      }
-
-      const { error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            role: 'empresa_privada',
-            full_name: data.full_name,
-            document_id: data.document_id,
-            document_type: 'CC',
-            entidad_id: entidad.id,
-            cargo_entidad: data.cargo_entidad,
-            consentimiento_datos: true,
-            fecha_consentimiento: new Date().toISOString(),
-          },
-        },
+        }),
       })
+      const json = await res.json()
+      if (json.error) { toast.error(json.error); return }
 
-      if (authError) {
-        toast.error(authError.message)
-        return
-      }
-
+      // Auto-login
+      const supabase = createClient()
+      await supabase.auth.signInWithPassword({ email: data.email, password: data.password })
       setPaso(3)
-    } catch {
-      toast.error('Error al registrarse')
+    } catch (e) {
+      toast.error(`Error: ${e instanceof Error ? e.message : String(e)}`)
     } finally {
       setLoading(false)
     }
@@ -126,8 +101,8 @@ export default function RegistroEmpresaPage() {
             Tu empresa está pendiente de validación. El proceso toma máximo 2 días hábiles.
             Una vez aprobada, podrás publicar vacantes.
           </p>
-          <Button variant="outline" className="w-full" onClick={() => router.push('/')}>
-            Volver al inicio
+          <Button variant="outline" className="w-full" onClick={() => router.push('/empresa')}>
+            Ir a mi tablero
           </Button>
         </CardContent>
       </Card>
@@ -158,7 +133,6 @@ export default function RegistroEmpresaPage() {
                   <FormMessage />
                 </FormItem>
               )} />
-
               <FormField control={form1.control} name="nit" render={({ field }) => (
                 <FormItem>
                   <FormLabel>NIT</FormLabel>
@@ -167,14 +141,11 @@ export default function RegistroEmpresaPage() {
                   <FormMessage />
                 </FormItem>
               )} />
-
               <FormField control={form1.control} name="sector_economico" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Sector económico</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger>
-                    </FormControl>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger></FormControl>
                     <SelectContent>
                       {['Tecnología', 'Salud', 'Educación', 'Logística', 'Manufactura',
                         'Comercio', 'Construcción', 'Financiero', 'Consultoría', 'Otro'].map((s) => (
@@ -185,14 +156,11 @@ export default function RegistroEmpresaPage() {
                   <FormMessage />
                 </FormItem>
               )} />
-
               <FormField control={form1.control} name="tamano_empresa" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tamaño de empresa</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger>
-                    </FormControl>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Selecciona..." /></SelectTrigger></FormControl>
                     <SelectContent>
                       <SelectItem value="microempresa">Microempresa (1-10)</SelectItem>
                       <SelectItem value="pequena">Pequeña (11-50)</SelectItem>
@@ -203,7 +171,6 @@ export default function RegistroEmpresaPage() {
                   <FormMessage />
                 </FormItem>
               )} />
-
               <Button type="submit" className="w-full">
                 Continuar <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
@@ -221,7 +188,6 @@ export default function RegistroEmpresaPage() {
                   <FormMessage />
                 </FormItem>
               )} />
-
               <FormField control={form2.control} name="document_id" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Cédula</FormLabel>
@@ -229,7 +195,6 @@ export default function RegistroEmpresaPage() {
                   <FormMessage />
                 </FormItem>
               )} />
-
               <FormField control={form2.control} name="cargo_entidad" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Cargo</FormLabel>
@@ -237,7 +202,6 @@ export default function RegistroEmpresaPage() {
                   <FormMessage />
                 </FormItem>
               )} />
-
               <FormField control={form2.control} name="email" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Correo empresarial</FormLabel>
@@ -245,7 +209,6 @@ export default function RegistroEmpresaPage() {
                   <FormMessage />
                 </FormItem>
               )} />
-
               <FormField control={form2.control} name="password" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Contraseña</FormLabel>
@@ -253,7 +216,16 @@ export default function RegistroEmpresaPage() {
                   <FormMessage />
                 </FormItem>
               )} />
-
+              <FormField control={form2.control} name="consentimiento" render={({ field }) => (
+                <FormItem className="flex gap-3 items-start space-y-0 rounded-md border p-4">
+                  <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                  <div className="space-y-1">
+                    <FormLabel className="cursor-pointer">Autorizo el tratamiento de mis datos personales</FormLabel>
+                    <p className="text-xs text-muted-foreground">De acuerdo con la Ley 1581 de 2012.</p>
+                    <FormMessage />
+                  </div>
+                </FormItem>
+              )} />
               <div className="flex gap-2">
                 <Button type="button" variant="outline" onClick={() => setPaso(1)}>
                   <ChevronLeft className="mr-2 h-4 w-4" /> Atrás
@@ -269,9 +241,7 @@ export default function RegistroEmpresaPage() {
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
           ¿Ya tienes cuenta?{' '}
-          <Link href="/login" className="text-primary hover:underline">
-            Inicia sesión
-          </Link>
+          <Link href="/login" className="text-primary hover:underline">Inicia sesión</Link>
         </p>
       </CardContent>
     </Card>

@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EvaluacionPostulantes } from '@/components/shared/evaluacion-postulantes'
 import { POSTULACION_ESTADO_LABELS } from '@/lib/constants'
 
@@ -14,19 +13,16 @@ export default async function PostulacionesVacantePage({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: profile } = await supabase
-    .from('profiles').select('entidad_id').eq('id', user!.id).single()
-
-  const { data: vacante } = await supabase
+  const { data: vacante } = await (supabase as any)
     .from('vacantes')
-    .select('id, titulo, estado, entidad_id')
+    .select('id, titulo, estado')
     .eq('id', vacanteId)
-    .eq('entidad_id', profile!.entidad_id!)
-    .single()
+    .eq('created_by', user!.id)
+    .maybeSingle()
 
   if (!vacante) notFound()
 
-  const { data: postulaciones } = await supabase
+  const { data: postulaciones } = await (supabase as any)
     .from('postulaciones')
     .select(`
       id, estado, codigo_seguimiento, puntaje_total, created_at, documentos,
@@ -35,7 +31,7 @@ export default async function PostulacionesVacantePage({
     .eq('vacante_id', vacanteId)
     .order('created_at', { ascending: false })
 
-  const conteoEstados = (postulaciones ?? []).reduce((acc, p) => {
+  const conteoEstados = (postulaciones ?? []).reduce((acc: Record<string, number>, p: any) => {
     acc[p.estado] = (acc[p.estado] ?? 0) + 1
     return acc
   }, {} as Record<string, number>)
@@ -50,7 +46,7 @@ export default async function PostulacionesVacantePage({
       <div className="flex flex-wrap gap-2">
         {Object.entries(conteoEstados).map(([estado, count]) => (
           <Badge key={estado} variant="outline" className="text-xs gap-1">
-            {POSTULACION_ESTADO_LABELS[estado]}: <strong>{count}</strong>
+            {POSTULACION_ESTADO_LABELS[estado]}: <strong>{count as number}</strong>
           </Badge>
         ))}
       </div>

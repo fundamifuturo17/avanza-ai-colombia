@@ -10,13 +10,10 @@ export default async function ProveedorPostulacionesPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: profile } = await supabase
-    .from('profiles').select('entidad_id').eq('id', user!.id).single()
-
-  const { data: vacantes } = await supabase
+  const { data: vacantes } = await (supabase as any)
     .from('vacantes')
     .select('id, titulo, estado, postulaciones(id, estado)')
-    .eq('entidad_id', profile!.entidad_id!)
+    .eq('created_by', user!.id)
     .in('estado', ['publicada', 'evaluacion', 'cerrada'])
     .order('created_at', { ascending: false })
 
@@ -31,7 +28,7 @@ export default async function ProveedorPostulacionesPage() {
         {!vacantes?.length && (
           <div className="text-center py-16 text-muted-foreground text-sm">No hay vacantes activas</div>
         )}
-        {vacantes?.map((v) => {
+        {vacantes?.map((v: any) => {
           const posts = (v.postulaciones as any[]) ?? []
           const pendientes = posts.filter((p: any) => p.estado === 'registrada').length
           const colorVariant = VACANTE_ESTADO_COLORS[v.estado] as any
