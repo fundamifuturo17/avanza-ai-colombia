@@ -49,6 +49,11 @@ export default function RegistroProveedorPage() {
       if (error) { toast.error(error.message); return }
       if (!authData.user) { toast.error('Error al crear la cuenta'); return }
 
+      // Establecer sesión explícitamente antes del insert
+      if (authData.session) {
+        await supabase.auth.setSession(authData.session)
+      }
+
       const perfil: any = {
         id: authData.user.id,
         role: 'proveedor',

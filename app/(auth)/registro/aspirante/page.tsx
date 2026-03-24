@@ -47,6 +47,10 @@ export default function RegistroAspirantePage() {
       if (error) { toast.error(error.message); return }
       if (!authData.user) { toast.error('Error al crear la cuenta'); return }
 
+      if (authData.session) {
+        await supabase.auth.setSession(authData.session)
+      }
+
       const perfil: any = {
         id: authData.user.id,
         role: 'aspirante',
