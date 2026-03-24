@@ -37,7 +37,7 @@ export async function crearUsuarioAdmin(formData: FormData) {
     return { error: authError.message }
   }
 
-  const { error: profileError } = await adminClient.from('profiles').insert({
+  const { error: profileError } = await adminClient.from('profiles').upsert({
     id: authData.user.id,
     role: role as any,
     email,
@@ -65,8 +65,27 @@ export async function crearUsuarioAdmin(formData: FormData) {
 
 export async function eliminarUsuario(userId: string) {
   const adminClient = createAdminClient()
+
+  // Borrar registros relacionados en orden para evitar FK violations
+  await adminClient.from('postulacion_historial' as any).delete().eq('cambiado_por', userId)
+  await adminClient.from('postulaciones' as any).delete().eq('aspirante_id', userId)
+  await adminClient.from('solicitudes_arco' as any).delete().eq('user_id', userId)
+  await adminClient.from('notificaciones' as any).delete().eq('user_id', userId)
+
+  // Vacantes creadas por este usuario (y sus postulaciones/historial en cascada)
+  const { data: vacantes } = await adminClient.from('vacantes' as any).select('id').eq('created_by', userId)
+  if (vacantes?.length) {
+    const vacanteIds = (vacantes as any[]).map((v) => v.id)
+    await adminClient.from('postulacion_historial' as any).delete().in('postulacion_id',
+      (await adminClient.from('postulaciones' as any).select('id').in('vacante_id', vacanteIds)).data?.map((p: any) => p.id) ?? []
+    )
+    await adminClient.from('postulaciones' as any).delete().in('vacante_id', vacanteIds)
+    await adminClient.from('vacantes' as any).delete().in('id', vacanteIds)
+  }
+
   const { error } = await adminClient.auth.admin.deleteUser(userId)
   if (error) return { error: error.message }
+
   revalidatePath('/admin/usuarios')
   return { error: null }
 }
