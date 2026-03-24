@@ -48,6 +48,7 @@ export default function RegistroProveedorPage() {
           role: 'proveedor',
           full_name: data.full_name,
           cargo_entidad: data.cargo_entidad,
+          entidad_nombre: data.entidad_nombre,
         }),
       })
       const json = await res.json()

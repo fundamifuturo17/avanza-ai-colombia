@@ -81,8 +81,8 @@ export function NuevaVacanteForm({
     if (publicar) setPublicando(true)
 
     try {
-      const { error } = await supabase.from('vacantes').insert({
-        entidad_id: entidadId,
+      const { error } = await (supabase as any).from('vacantes').insert({
+        ...(entidadId ? { entidad_id: entidadId } : {}),
         created_by: userId,
         titulo: data.titulo,
         descripcion: data.descripcion,

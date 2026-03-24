@@ -12,17 +12,14 @@ export default async function ProveedorVacantesPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: profile } = await supabase
-    .from('profiles').select('entidad_id').eq('id', user!.id).single()
-
-  const { data: vacantes } = await supabase
+  const { data: vacantes } = await (supabase as any)
     .from('vacantes')
     .select(`
       id, titulo, estado, fecha_cierre, created_at, tipo_contrato,
       numero_convocatoria, departamento,
       postulaciones(id)
     `)
-    .eq('entidad_id', profile!.entidad_id!)
+    .eq('created_by', user!.id)
     .order('created_at', { ascending: false })
 
   return (
@@ -45,7 +42,7 @@ export default async function ProveedorVacantesPage() {
             <p>No tienes vacantes. Crea la primera.</p>
           </div>
         )}
-        {vacantes?.map((v) => {
+        {vacantes?.map((v: any) => {
           const totalPostulaciones = (v.postulaciones as any[])?.length ?? 0
           const dias = v.fecha_cierre ? diasRestantes(v.fecha_cierre) : null
           const colorVariant = VACANTE_ESTADO_COLORS[v.estado] as any

@@ -5,24 +5,24 @@ export default async function NuevaVacantePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: profile } = await supabase
+  const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('entidad_id, role, entidades(nombre, tipo)')
     .eq('id', user!.id)
-    .single()
+    .maybeSingle() as { data: any }
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
       <div>
         <h1 className="text-xl font-semibold">Nueva vacante</h1>
         <p className="text-sm text-muted-foreground">
-          {(profile?.entidades as any)?.nombre}
+          {profile?.entidades?.nombre}
         </p>
       </div>
       <NuevaVacanteForm
-        entidadId={profile!.entidad_id!}
+        entidadId={profile?.entidad_id ?? ''}
         userId={user!.id}
-        esPublico={(profile?.entidades as any)?.tipo === 'publico'}
+        esPublico={profile?.entidades?.tipo === 'publico'}
       />
     </div>
   )
