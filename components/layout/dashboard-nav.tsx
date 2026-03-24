@@ -39,6 +39,7 @@ const NAV_LINKS: Record<UserRole, { href: string; label: string; icon: React.Rea
     { href: '/proveedor', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
     { href: '/proveedor/vacantes', label: 'Vacantes', icon: <Briefcase className="h-4 w-4" /> },
     { href: '/proveedor/postulaciones', label: 'Postulaciones', icon: <ClipboardList className="h-4 w-4" /> },
+    { href: '/proveedor/mis-datos', label: 'Mis datos', icon: <User className="h-4 w-4" /> },
   ],
   empresa_privada: [
     { href: '/empresa', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },

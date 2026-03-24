@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { MisDatosClient } from '@/components/shared/mis-datos-client'
 
-export default async function MisDatosPage() {
+export default async function MisDatosProveedorPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
