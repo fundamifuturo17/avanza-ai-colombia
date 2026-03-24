@@ -91,7 +91,7 @@ export default function RegistroAspirantePage() {
       })
 
       if (perfilError) {
-        toast.error('Cuenta creada pero hubo un error guardando el perfil')
+        toast.error(`Error guardando perfil: ${perfilError}`)
         return
       }
 
