@@ -1,6 +1,14 @@
 'use server'
 
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
+
+function createAdminClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
+}
 
 export interface PerfilAspiranteData {
   userId: string
@@ -25,7 +33,7 @@ export interface PerfilProveedorData {
 }
 
 export async function crearPerfilAspirante(data: PerfilAspiranteData) {
-  const supabase = await createServiceClient()
+  const supabase = createAdminClient()
 
   const { error } = await supabase.from('profiles').insert({
     id: data.userId,
@@ -50,7 +58,7 @@ export async function crearPerfilAspirante(data: PerfilAspiranteData) {
 }
 
 export async function crearPerfilProveedor(data: PerfilProveedorData) {
-  const supabase = await createServiceClient()
+  const supabase = createAdminClient()
 
   const { error } = await supabase.from('profiles').insert({
     id: data.userId,
