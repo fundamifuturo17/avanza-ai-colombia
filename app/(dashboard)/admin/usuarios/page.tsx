@@ -1,4 +1,12 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+
+function createAdminClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
+}
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatDate } from '@/lib/utils'
@@ -7,7 +15,7 @@ import { User } from 'lucide-react'
 import { CrearUsuarioForm } from '@/components/admin/crear-usuario-form'
 
 export default async function AdminUsuariosPage() {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const [usuariosRes, entidadesRes] = await Promise.all([
     supabase
