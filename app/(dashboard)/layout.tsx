@@ -12,7 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .from('profiles')
     .select('id, role, full_name, email, entidad_id')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
   if (!profile) redirect('/api/signout')
 

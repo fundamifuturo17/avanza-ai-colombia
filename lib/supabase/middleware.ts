@@ -50,7 +50,7 @@ export async function updateSession(request: NextRequest) {
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     const roleMap: Record<string, string> = {
       aspirante: '/aspirante/oportunidades',
