@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# scripts locales (pueden contener credenciales)
+/scripts
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
