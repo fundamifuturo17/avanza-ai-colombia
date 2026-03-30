@@ -13,21 +13,23 @@ export async function procesarValidacion({
 }: {
   empresaId: string
   empresaNombre: string
-  accion: 'validar' | 'rechazar'
+  accion: 'validar' | 'rechazar' | 'revocar'
   observaciones: string
 }) {
   const supabase = await createClient()
   const serviceClient = await createServiceClient()
 
+  const validado = accion === 'validar'
+  const activo = accion !== 'rechazar'
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any)
     .from('entidades')
-    .update({ validado: accion === 'validar', activo: accion === 'validar' })
+    .update({ validado, activo })
     .eq('id', empresaId)
 
   if (error) return { error: (error as any).message }
 
-  // Notificar al usuario de la empresa (si tiene perfil vinculado)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: perfiles } = await (serviceClient as any)
     .from('profiles')
@@ -36,12 +38,20 @@ export async function procesarValidacion({
     .limit(1)
 
   if (perfiles && (perfiles as any[]).length > 0) {
+    const titulos = {
+      validar: 'Empresa verificada',
+      rechazar: 'Verificación no aprobada',
+      revocar: 'Validación revocada',
+    }
+    const mensajes = {
+      validar: `Tu empresa "${empresaNombre}" fue verificada. Ya puedes publicar vacantes.`,
+      rechazar: `La verificación de "${empresaNombre}" no fue aprobada. ${observaciones}`,
+      revocar: `La validación de "${empresaNombre}" fue revocada. ${observaciones}`,
+    }
     await insertarNotificacion({
       userId: (perfiles as any[])[0].id,
-      titulo: accion === 'validar' ? 'Empresa verificada' : 'Verificación no aprobada',
-      mensaje: accion === 'validar'
-        ? `Tu empresa "${empresaNombre}" fue verificada. Ya puedes publicar vacantes.`
-        : `La verificación de "${empresaNombre}" no fue aprobada. ${observaciones}`,
+      titulo: titulos[accion],
+      mensaje: mensajes[accion],
       tipo: 'sistema',
       referenciaId: empresaId,
     })
@@ -51,8 +61,8 @@ export async function procesarValidacion({
     action: 'UPDATE',
     tableName: 'entidades',
     recordId: empresaId,
-    oldData: { validado: false },
-    newData: { validado: accion === 'validar', observaciones },
+    oldData: { validado: accion !== 'validar' },
+    newData: { validado, activo, observaciones },
   })
 
   revalidatePath('/admin/validaciones')

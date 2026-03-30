@@ -48,6 +48,8 @@ const NAV_LINKS: Record<UserRole, { href: string; label: string; icon: React.Rea
   ],
   admin: [
     { href: '/admin/transparencia', label: 'Transparencia', icon: <BarChart3 className="h-4 w-4" /> },
+    { href: '/admin/vacantes', label: 'Vacantes', icon: <Briefcase className="h-4 w-4" /> },
+    { href: '/admin/aspirantes', label: 'Aspirantes', icon: <User className="h-4 w-4" /> },
     { href: '/admin/validaciones', label: 'Validaciones', icon: <CheckSquare className="h-4 w-4" /> },
     { href: '/admin/solicitudes-arco', label: 'ARCO', icon: <MessageSquare className="h-4 w-4" /> },
     { href: '/admin/auditoria', label: 'Auditoría', icon: <Shield className="h-4 w-4" /> },

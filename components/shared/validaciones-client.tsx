@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { CheckCircle2, XCircle, Building2, Loader2 } from 'lucide-react'
+import { CheckCircle2, XCircle, Building2, Loader2, ShieldOff } from 'lucide-react'
 
 interface Empresa {
   id: string
@@ -31,7 +31,7 @@ interface Empresa {
 
 export function ValidacionesClient({ empresas }: { empresas: Empresa[] }) {
   const [seleccionada, setSeleccionada] = useState<Empresa | null>(null)
-  const [accion, setAccion] = useState<'validar' | 'rechazar' | null>(null)
+  const [accion, setAccion] = useState<'validar' | 'rechazar' | 'revocar' | null>(null)
   const [observaciones, setObservaciones] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -57,7 +57,8 @@ export function ValidacionesClient({ empresas }: { empresas: Empresa[] }) {
       toast.error('Error al procesar la validación')
       return
     }
-    toast.success(accion === 'validar' ? 'Empresa validada correctamente' : 'Empresa rechazada')
+    const mensajes = { validar: 'Empresa validada', rechazar: 'Empresa rechazada', revocar: 'Validación revocada' }
+    toast.success(mensajes[accion])
     setSeleccionada(null)
     setAccion(null)
     setObservaciones('')
@@ -106,9 +107,19 @@ export function ValidacionesClient({ empresas }: { empresas: Empresa[] }) {
             )}
 
             {!showActions && (
-              <Badge className="text-xs bg-green-100 text-green-700 border-green-200 shrink-0">
-                <CheckCircle2 className="h-3 w-3 mr-1" /> Validada
-              </Badge>
+              <div className="flex items-center gap-2 shrink-0">
+                <Badge className="text-xs bg-green-100 text-green-700 border-green-200">
+                  <CheckCircle2 className="h-3 w-3 mr-1" /> Validada
+                </Badge>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs gap-1 text-orange-600 border-orange-200 hover:bg-orange-50"
+                  onClick={() => { setSeleccionada(empresa); setAccion('revocar') }}
+                >
+                  <ShieldOff className="h-3.5 w-3.5" /> Revocar
+                </Button>
+              </div>
             )}
           </div>
         </CardContent>
@@ -147,7 +158,7 @@ export function ValidacionesClient({ empresas }: { empresas: Empresa[] }) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {accion === 'validar' ? 'Validar empresa' : 'Rechazar empresa'}
+              {accion === 'validar' ? 'Validar empresa' : accion === 'rechazar' ? 'Rechazar empresa' : 'Revocar validación'}
             </DialogTitle>
             <DialogDescription>{seleccionada?.nombre}</DialogDescription>
           </DialogHeader>
@@ -157,7 +168,9 @@ export function ValidacionesClient({ empresas }: { empresas: Empresa[] }) {
               <Textarea
                 placeholder={accion === 'validar'
                   ? 'Documentación verificada, empresa registrada en RUES...'
-                  : 'Motivo del rechazo: documentación incompleta...'}
+                  : accion === 'rechazar'
+                  ? 'Motivo del rechazo: documentación incompleta...'
+                  : 'Motivo de la revocación: actividad fraudulenta detectada...'}
                 value={observaciones}
                 onChange={(e) => setObservaciones(e.target.value)}
                 rows={3}
@@ -169,12 +182,12 @@ export function ValidacionesClient({ empresas }: { empresas: Empresa[] }) {
                 Cancelar
               </Button>
               <Button
-                className={`flex-1 ${accion === 'rechazar' ? 'bg-red-600 hover:bg-red-700' : ''}`}
+                className={`flex-1 ${accion === 'rechazar' ? 'bg-red-600 hover:bg-red-700' : accion === 'revocar' ? 'bg-orange-600 hover:bg-orange-700' : ''}`}
                 onClick={handleProcesar}
                 disabled={loading}
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {accion === 'validar' ? 'Confirmar validación' : 'Confirmar rechazo'}
+                {accion === 'validar' ? 'Confirmar validación' : accion === 'rechazar' ? 'Confirmar rechazo' : 'Confirmar revocación'}
               </Button>
             </div>
           </div>
