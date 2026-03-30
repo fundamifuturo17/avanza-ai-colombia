@@ -1,8 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useNotificacionesStore } from '@/stores/notificaciones-store'
+
+const POLL_INTERVAL = 30_000 // 30 segundos
 
 interface Notificacion {
   id: string
@@ -22,6 +24,9 @@ export function NotificacionesInitializer({
   userId: string
 }) {
   const { setNotificaciones, agregarNotificacion } = useNotificacionesStore()
+  const lastCreatedAt = useRef<string | null>(
+    notificaciones.length > 0 ? notificaciones[0].created_at : null
+  )
 
   useEffect(() => {
     setNotificaciones(notificaciones)
@@ -29,23 +34,29 @@ export function NotificacionesInitializer({
 
   useEffect(() => {
     const supabase = createClient()
-    const channel = supabase
-      .channel(`notificaciones-${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notificaciones',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          agregarNotificacion(payload.new as Notificacion)
-        }
-      )
-      .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
+    async function poll() {
+      const query = (supabase as any)
+        .from('notificaciones')
+        .select('id, titulo, mensaje, leida, tipo, referencia_id, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+      if (lastCreatedAt.current) {
+        query.gt('created_at', lastCreatedAt.current)
+      }
+
+      const { data } = await query
+
+      if (data && data.length > 0) {
+        data.forEach((n: Notificacion) => agregarNotificacion(n))
+        lastCreatedAt.current = data[0].created_at
+      }
+    }
+
+    const interval = setInterval(poll, POLL_INTERVAL)
+    return () => clearInterval(interval)
   }, [userId, agregarNotificacion])
 
   return null
