@@ -47,11 +47,15 @@ export function NuevaVacanteForm({
   userId,
   esPublico,
   redirectTo = '/proveedor/vacantes',
+  vacanteId,
+  initialData,
 }: {
   entidadId: string
   userId: string
   esPublico: boolean
   redirectTo?: string
+  vacanteId?: string
+  initialData?: Partial<FormData>
 }) {
   const [paso, setPaso] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -62,10 +66,20 @@ export function NuevaVacanteForm({
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      titulo: '', descripcion: '', requisitos: '',
-      tipo_contrato: '', departamento: '', municipio: '',
-      visible_salario: true, visible_proceso: esPublico,
-      salario_min: '', salario_max: '', fecha_cierre: '',
+      titulo: initialData?.titulo ?? '',
+      descripcion: initialData?.descripcion ?? '',
+      requisitos: initialData?.requisitos ?? '',
+      tipo_contrato: initialData?.tipo_contrato ?? '',
+      departamento: initialData?.departamento ?? '',
+      municipio: initialData?.municipio ?? '',
+      visible_salario: initialData?.visible_salario ?? true,
+      visible_proceso: initialData?.visible_proceso ?? esPublico,
+      salario_min: initialData?.salario_min ?? '',
+      salario_max: initialData?.salario_max ?? '',
+      fecha_cierre: initialData?.fecha_cierre ?? '',
+      beneficios: initialData?.beneficios ?? '',
+      numero_convocatoria: initialData?.numero_convocatoria ?? '',
+      presupuesto_programado: initialData?.presupuesto_programado ?? '',
     },
   })
 
@@ -82,30 +96,36 @@ export function NuevaVacanteForm({
     setLoading(true)
     if (publicar) setPublicando(true)
 
+    const payload = {
+      titulo: data.titulo,
+      descripcion: data.descripcion,
+      requisitos: data.requisitos,
+      tipo_contrato: data.tipo_contrato,
+      departamento: data.departamento,
+      municipio: data.municipio,
+      salario_min: data.salario_min ? Number(data.salario_min) : null,
+      salario_max: data.salario_max ? Number(data.salario_max) : null,
+      beneficios: data.beneficios || null,
+      numero_convocatoria: data.numero_convocatoria || null,
+      presupuesto_programado: data.presupuesto_programado ? Number(data.presupuesto_programado) : null,
+      fecha_cierre: data.fecha_cierre,
+      visible_salario: data.visible_salario,
+      visible_proceso: data.visible_proceso,
+      estado: publicar ? 'publicada' : 'borrador',
+    }
+
     try {
-      const { error } = await (supabase as any).from('vacantes').insert({
-        ...(entidadId ? { entidad_id: entidadId } : {}),
-        created_by: userId,
-        titulo: data.titulo,
-        descripcion: data.descripcion,
-        requisitos: data.requisitos,
-        tipo_contrato: data.tipo_contrato,
-        departamento: data.departamento,
-        municipio: data.municipio,
-        salario_min: data.salario_min ? Number(data.salario_min) : null,
-        salario_max: data.salario_max ? Number(data.salario_max) : null,
-        beneficios: data.beneficios || null,
-        numero_convocatoria: data.numero_convocatoria || null,
-        presupuesto_programado: data.presupuesto_programado ? Number(data.presupuesto_programado) : null,
-        fecha_cierre: data.fecha_cierre,
-        visible_salario: data.visible_salario,
-        visible_proceso: data.visible_proceso,
-        estado: publicar ? 'publicada' : 'borrador',
-      })
+      const { error } = vacanteId
+        ? await (supabase as any).from('vacantes').update(payload).eq('id', vacanteId)
+        : await (supabase as any).from('vacantes').insert({
+            ...(entidadId ? { entidad_id: entidadId } : {}),
+            created_by: userId,
+            ...payload,
+          })
 
       if (error) throw error
 
-      toast.success(publicar ? 'Vacante publicada' : 'Borrador guardado')
+      toast.success(vacanteId ? 'Vacante actualizada' : publicar ? 'Vacante publicada' : 'Borrador guardado')
       router.push(redirectTo)
       router.refresh()
     } catch {
