@@ -46,10 +46,12 @@ export function NuevaVacanteForm({
   entidadId,
   userId,
   esPublico,
+  redirectTo = '/proveedor/vacantes',
 }: {
   entidadId: string
   userId: string
   esPublico: boolean
+  redirectTo?: string
 }) {
   const [paso, setPaso] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -104,7 +106,7 @@ export function NuevaVacanteForm({
       if (error) throw error
 
       toast.success(publicar ? 'Vacante publicada' : 'Borrador guardado')
-      router.push('/proveedor/vacantes')
+      router.push(redirectTo)
       router.refresh()
     } catch {
       toast.error('Error al guardar la vacante')

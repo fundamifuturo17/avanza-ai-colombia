@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { procesarValidacion } from '@/app/actions/validaciones'
 import { formatDate } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -35,36 +35,33 @@ export function ValidacionesClient({ empresas }: { empresas: Empresa[] }) {
   const [observaciones, setObservaciones] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   const pendientes = empresas.filter((e) => !e.validado && e.activo)
   const validadas = empresas.filter((e) => e.validado)
 
-  async function procesarValidacion() {
+  async function handleProcesar() {
     if (!seleccionada || !accion) return
     if (!observaciones.trim()) {
       toast.error('Las observaciones son obligatorias')
       return
     }
     setLoading(true)
-    try {
-      const { error } = await supabase
-        .from('entidades')
-        .update({ validado: accion === 'validar', activo: accion === 'validar' })
-        .eq('id', seleccionada.id)
-
-      if (error) throw error
-
-      toast.success(accion === 'validar' ? 'Empresa validada correctamente' : 'Empresa rechazada')
-      setSeleccionada(null)
-      setAccion(null)
-      setObservaciones('')
-      router.refresh()
-    } catch {
+    const { error } = await procesarValidacion({
+      empresaId: seleccionada.id,
+      empresaNombre: seleccionada.nombre,
+      accion,
+      observaciones,
+    })
+    setLoading(false)
+    if (error) {
       toast.error('Error al procesar la validación')
-    } finally {
-      setLoading(false)
+      return
     }
+    toast.success(accion === 'validar' ? 'Empresa validada correctamente' : 'Empresa rechazada')
+    setSeleccionada(null)
+    setAccion(null)
+    setObservaciones('')
+    router.refresh()
   }
 
   function EmpresaCard({ empresa, showActions }: { empresa: Empresa; showActions: boolean }) {
@@ -173,7 +170,7 @@ export function ValidacionesClient({ empresas }: { empresas: Empresa[] }) {
               </Button>
               <Button
                 className={`flex-1 ${accion === 'rechazar' ? 'bg-red-600 hover:bg-red-700' : ''}`}
-                onClick={procesarValidacion}
+                onClick={handleProcesar}
                 disabled={loading}
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

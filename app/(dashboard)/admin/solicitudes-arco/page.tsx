@@ -7,7 +7,7 @@ export default async function AdminArcoPage() {
   const { data: solicitudes } = await supabase
     .from('solicitudes_arco')
     .select(`
-      id, tipo, estado, descripcion, respuesta, fecha_limite, created_at,
+      id, user_id, tipo, estado, descripcion, respuesta, fecha_limite, created_at,
       profiles!user_id (full_name, email, document_id)
     `)
     .order('created_at', { ascending: false })

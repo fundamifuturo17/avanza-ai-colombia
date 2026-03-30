@@ -14,10 +14,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 import {
   Briefcase, LayoutDashboard, FileText, User, Shield,
-  LogOut, Bell, Bot, Building2, ClipboardList,
+  LogOut, Bot, Building2, ClipboardList,
   BarChart3, Users, CheckSquare, MessageSquare,
 } from 'lucide-react'
-import { useNotificacionesStore } from '@/stores/notificaciones-store'
+import { NotificacionesBell } from '@/components/layout/notificaciones-bell'
 import type { UserRole } from '@/types/database'
 
 interface Profile {
@@ -58,7 +58,6 @@ const NAV_LINKS: Record<UserRole, { href: string; label: string; icon: React.Rea
 export function DashboardNav({ profile }: { profile: Profile }) {
   const pathname = usePathname()
   const router = useRouter()
-  const noLeidas = useNotificacionesStore((s) => s.noLeidas)
   const supabase = createClient()
 
   async function handleLogout() {
@@ -103,14 +102,7 @@ export function DashboardNav({ profile }: { profile: Profile }) {
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
-          <Button variant="ghost" size="icon" className="relative h-8 w-8 text-slate-500 hover:text-slate-900 rounded-lg">
-            <Bell className="h-4 w-4" />
-            {noLeidas > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
-                {noLeidas > 9 ? '9+' : noLeidas}
-              </span>
-            )}
-          </Button>
+          <NotificacionesBell />
 
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-2 h-8 pl-1.5 pr-2.5 rounded-lg hover:bg-slate-100 transition-colors outline-none">

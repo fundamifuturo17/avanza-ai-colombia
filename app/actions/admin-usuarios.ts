@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
+import { insertarAuditLog } from '@/app/actions/audit'
 
 function createAdminClient() {
   return createClient(
@@ -59,6 +60,13 @@ export async function crearUsuarioAdmin(formData: FormData) {
     return { error: profileError.message }
   }
 
+  await insertarAuditLog({
+    action: 'INSERT',
+    tableName: 'profiles',
+    recordId: authData.user.id,
+    newData: { email, role, full_name },
+  })
+
   revalidatePath('/admin/usuarios')
   return { error: null }
 }
@@ -85,6 +93,12 @@ export async function eliminarUsuario(userId: string) {
 
   const { error } = await adminClient.auth.admin.deleteUser(userId)
   if (error) return { error: error.message }
+
+  await insertarAuditLog({
+    action: 'DELETE',
+    tableName: 'profiles',
+    recordId: userId,
+  })
 
   revalidatePath('/admin/usuarios')
   return { error: null }

@@ -27,8 +27,23 @@ async function getStats() {
   }
 }
 
+async function getVacantesPublicadas() {
+  try {
+    const supabase = await createClient()
+    const { data } = await (supabase as any)
+      .from('vacantes')
+      .select('id, titulo, tipo_contrato, departamento, municipio, salario_min, salario_max, visible_salario, fecha_cierre, created_at, entidades(nombre, tipo)')
+      .eq('estado', 'publicada')
+      .order('created_at', { ascending: false })
+      .limit(6)
+    return (data as any[]) ?? []
+  } catch {
+    return []
+  }
+}
+
 export default async function LandingPage() {
-  const stats = await getStats()
+  const [stats, vacantesPublicadas] = await Promise.all([getStats(), getVacantesPublicadas()])
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f8fafc]">
@@ -110,6 +125,97 @@ export default async function LandingPage() {
           <span className="flex items-center gap-1.5"><Shield className="h-3 w-3 text-blue-500" /> Ley 909 · Empleo Público</span>
           <span className="flex items-center gap-1.5"><Globe className="h-3 w-3 text-violet-500" /> Ley 1712 · Transparencia</span>
           <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3 w-3 text-emerald-500" /> Código abierto · MIT</span>
+        </div>
+      </section>
+
+      {/* VACANTES PUBLICADAS */}
+      <section className="py-20 px-6 bg-slate-50">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-between mb-10">
+            <div>
+              <Badge variant="secondary" className="mb-2 text-xs">Oportunidades</Badge>
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+                Vacantes disponibles
+              </h2>
+              <p className="text-slate-500 text-sm mt-1">
+                {stats.vacantes > 0
+                  ? `${stats.vacantes.toLocaleString('es-CO')} oportunidades activas en Colombia`
+                  : 'Las primeras convocatorias estarán disponibles pronto'}
+              </p>
+            </div>
+            <Link href="/registro/aspirante">
+              <Button variant="outline" size="sm" className="hidden sm:flex gap-2 rounded-full">
+                Ver todas <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </div>
+
+          {vacantesPublicadas.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+              <Briefcase className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-500 font-medium">Próximamente</p>
+              <p className="text-slate-400 text-sm mt-1">Las entidades y empresas están cargando sus convocatorias</p>
+              <Link href="/registro/aspirante" className="inline-block mt-4">
+                <Button size="sm" className="rounded-full">Regístrate para ser el primero</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {vacantesPublicadas.map((v: any) => {
+                const esPublico = v.entidades?.tipo === 'publico'
+                const dias = v.fecha_cierre
+                  ? Math.ceil((new Date(v.fecha_cierre).getTime() - Date.now()) / 86400000)
+                  : null
+                return (
+                  <div key={v.id} className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${esPublico ? 'bg-blue-100 text-blue-700' : 'bg-violet-100 text-violet-700'}`}>
+                        {esPublico ? 'Público' : 'Privado'}
+                      </span>
+                      {dias !== null && dias >= 0 && dias <= 7 && (
+                        <span className="text-xs bg-red-100 text-red-700 font-medium px-2.5 py-1 rounded-full">
+                          Cierra en {dias}d
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900 text-sm leading-snug">{v.titulo}</h3>
+                      {v.entidades?.nombre && (
+                        <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                          <Building2 className="h-3 w-3 shrink-0" />
+                          {v.entidades.nombre}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
+                      {(v.departamento || v.municipio) && (
+                        <span>{[v.municipio, v.departamento].filter(Boolean).join(', ')}</span>
+                      )}
+                      <span className="capitalize">{v.tipo_contrato?.replace('_', ' ')}</span>
+                    </div>
+                    {v.visible_salario && (v.salario_min || v.salario_max) && (
+                      <p className="text-sm font-semibold text-emerald-700">
+                        {v.salario_min ? `Desde $${Number(v.salario_min).toLocaleString('es-CO')}` : `Hasta $${Number(v.salario_max).toLocaleString('es-CO')}`}
+                      </p>
+                    )}
+                    <Link href="/registro/aspirante" className="mt-auto">
+                      <Button variant="outline" size="sm" className="w-full h-8 text-xs rounded-full">
+                        Aplicar <ArrowRight className="ml-1 h-3 w-3" />
+                      </Button>
+                    </Link>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          <div className="mt-6 text-center sm:hidden">
+            <Link href="/registro/aspirante">
+              <Button variant="outline" size="sm" className="rounded-full gap-2">
+                Ver todas las vacantes <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 

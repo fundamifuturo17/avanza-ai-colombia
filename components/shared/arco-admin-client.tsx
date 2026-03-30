@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { procesarSolicitudArco } from '@/app/actions/arco'
 import { formatDate, diasRestantes } from '@/lib/utils'
 import { ARCO_TIPO_LABELS } from '@/lib/constants'
 import { Badge } from '@/components/ui/badge'
@@ -28,6 +28,7 @@ const ESTADO_LABELS: Record<string, string> = {
 
 interface Solicitud {
   id: string
+  user_id: string
   tipo: string
   estado: string
   descripcion: string | null
@@ -43,35 +44,34 @@ export function ArcoAdminClient({ solicitudes }: { solicitudes: Solicitud[] }) {
   const [respuesta, setRespuesta] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   const pendientes = solicitudes.filter((s) => s.estado === 'pendiente' || s.estado === 'en_proceso')
   const resueltas = solicitudes.filter((s) => s.estado === 'resuelta' || s.estado === 'rechazada' || s.estado === 'escalada')
 
-  async function procesarSolicitud() {
+  async function handleProcesar() {
     if (!seleccionada || !nuevoEstado || !respuesta.trim()) {
       toast.error('Completa todos los campos')
       return
     }
     setLoading(true)
-    try {
-      const { error } = await supabase
-        .from('solicitudes_arco')
-        .update({ estado: nuevoEstado as ArcoEstado, respuesta })
-        .eq('id', seleccionada.id)
-
-      if (error) throw error
-
-      toast.success('Solicitud actualizada')
-      setSeleccionada(null)
-      setNuevoEstado('')
-      setRespuesta('')
-      router.refresh()
-    } catch {
+    const { error } = await procesarSolicitudArco({
+      solicitudId: seleccionada.id,
+      userId: seleccionada.user_id,
+      tipo: seleccionada.tipo,
+      estadoAnterior: seleccionada.estado,
+      nuevoEstado: nuevoEstado as ArcoEstado,
+      respuesta,
+    })
+    setLoading(false)
+    if (error) {
       toast.error('Error al procesar la solicitud')
-    } finally {
-      setLoading(false)
+      return
     }
+    toast.success('Solicitud actualizada')
+    setSeleccionada(null)
+    setNuevoEstado('')
+    setRespuesta('')
+    router.refresh()
   }
 
   function SolicitudCard({ s }: { s: Solicitud }) {
@@ -191,7 +191,7 @@ export function ArcoAdminClient({ solicitudes }: { solicitudes: Solicitud[] }) {
             </div>
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => setSeleccionada(null)}>Cancelar</Button>
-              <Button className="flex-1" onClick={procesarSolicitud} disabled={loading}>
+              <Button className="flex-1" onClick={handleProcesar} disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Confirmar
               </Button>

@@ -18,6 +18,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Loader2, FileText, User, ChevronDown, ChevronUp } from 'lucide-react'
 import type { PostulacionEstado } from '@/types/database'
+import { insertarNotificacion } from '@/app/actions/notificaciones'
+import { insertarAuditLog } from '@/app/actions/audit'
 
 const TRANSICIONES_POSTULACION: Record<string, PostulacionEstado[]> = {
   registrada: ['en_revision', 'rechazada'],
@@ -84,18 +86,40 @@ export function EvaluacionPostulantes({
 
       if (upError) throw upError
 
+      const { data: { user } } = await supabase.auth.getUser()
+
       await supabase.from('postulacion_historial').insert({
         postulacion_id: seleccionado.id,
         estado_anterior: seleccionado.estado as PostulacionEstado,
         estado_nuevo: nuevoEstado as PostulacionEstado,
         justificacion,
-        cambiado_por: (await supabase.auth.getUser()).data.user!.id,
+        cambiado_por: user!.id,
+      })
+
+      // Notificar al aspirante
+      if (seleccionado.profiles?.id) {
+        await insertarNotificacion({
+          userId: seleccionado.profiles.id,
+          titulo: 'Tu postulación fue actualizada',
+          mensaje: `Tu postulación cambió a: ${POSTULACION_ESTADO_LABELS[nuevoEstado]}. ${justificacion}`,
+          tipo: 'estado_cambio',
+          referenciaId: seleccionado.id,
+        })
+      }
+
+      // Registrar en auditoría
+      await insertarAuditLog({
+        action: 'UPDATE',
+        tableName: 'postulaciones',
+        recordId: seleccionado.id,
+        oldData: { estado: seleccionado.estado },
+        newData: { estado: nuevoEstado, justificacion_cambio: justificacion },
       })
 
       setLista((prev) =>
         prev.map((p) => p.id === seleccionado.id ? { ...p, estado: nuevoEstado } : p)
       )
-      toast.success('Estado actualizado. El aspirante será notificado.')
+      toast.success('Estado actualizado. El aspirante fue notificado.')
       setSeleccionado(null)
       setNuevoEstado('')
       setJustificacion('')

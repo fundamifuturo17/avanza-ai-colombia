@@ -25,6 +25,7 @@ export default async function EmpresaNuevaVacantePage() {
         entidadId={profile?.entidad_id ?? ''}
         userId={user!.id}
         esPublico={false}
+        redirectTo="/empresa/vacantes"
       />
     </div>
   )

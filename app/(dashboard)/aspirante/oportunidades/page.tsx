@@ -20,14 +20,19 @@ export default async function OportunidadesPage({
   const params = await searchParams
   const supabase = await createClient()
 
-  let query = supabase
+  // Con filtro sector usamos !inner para poder filtrar por la tabla relacionada
+  const joinSector = params.sector
+    ? 'entidades!inner(id, nombre, tipo, validado)'
+    : 'entidades(id, nombre, tipo, validado)'
+
+  let query = (supabase as any)
     .from('vacantes')
     .select(`
       id, titulo, descripcion, salario_min, salario_max,
       tipo_contrato, departamento, municipio, fecha_cierre,
       visible_salario, visible_proceso, estado, created_at,
       numero_convocatoria,
-      entidades (id, nombre, tipo, validado)
+      ${joinSector}
     `)
     .eq('estado', 'publicada')
     .order('created_at', { ascending: false })
